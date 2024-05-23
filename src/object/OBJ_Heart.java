@@ -1,18 +1,18 @@
 package object;
 
+import entity.Entity;
 import main.GamePanel;
 
-public class OBJ_Heart extends SuperObject {
-
-    GamePanel gamePanel;
+public class OBJ_Heart extends Entity {
 
     public OBJ_Heart(GamePanel gamePanel) {
-        this.gamePanel = gamePanel;
+        super(gamePanel);
+        name = "Heart";
+        collision = true;
+        image = setup("/objects/heart_full");
+        image2 = setup("/objects/heart_half");
+        image3 = setup("/objects/heart_blank");
 
-        name = "heart";
-        collision = false;
-        worldX = 0;
-        worldY = 0;
     }
 
 }

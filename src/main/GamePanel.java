@@ -4,12 +4,17 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import javax.swing.JPanel;
 
+import entity.Entity;
 import entity.Player;
-import object.SuperObject;
+import main.UI.UI;
 import tile.TileManager;
+import util.ExperienceUtils;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -17,44 +22,60 @@ public class GamePanel extends JPanel implements Runnable {
 	final int scale = 3;
 
 	public final int tileSize = originalTileSize * scale;
-	public final int maxScreenCol = 16;
-	public final int maxScreenRow = 12;
+	public final int maxScreenCol = 11;
+	public final int maxScreenRow = 7;
 	public final int screenWidth = tileSize * maxScreenCol;
 	public final int screenHeight = tileSize * maxScreenRow;
 
 	// World settings
-	public final int maxWorldCol = 50;
-	public final int maxWorldRow = 50;
+	public final int maxWorldCol = 100;
+	public final int maxWorldRow = 100;
 	public final int worldWidth = tileSize * maxWorldCol;
 	public final int worldHeight = tileSize * maxWorldRow;
 
 	int FPS = 60;
 
 	TileManager tileManager = new TileManager(this);
-	KeyHandler keyHandler = new KeyHandler();
-	Sound sound = new Sound();
+	public KeyHandler keyHandler = new KeyHandler(this);
+	Sound music = new Sound();
+	Sound sfx = new Sound();
 
 	public CollisionManager collisionManager = new CollisionManager(this);
 	public AssetSetter assetSetter = new AssetSetter(this);
-	public SuperObject obj[] = new SuperObject[10];
+	public UI ui = new UI(this);
+	public EventManager eventManager = new EventManager(this);
+	public ExperienceUtils experienceUtils = new ExperienceUtils(this);
+
 	public Player player = new Player(this, keyHandler);
+	public Entity obj[] = new Entity[10];
+	public Entity npc[] = new Entity[10];
+	public Entity monster[] = new Entity[20];
+	ArrayList<Entity> entityList = new ArrayList<Entity>();
+
+	public int gameState;
+	public final int playState = 1;
+	public final int pauseState = 2;
+	public final int dialogueState = 3;
+	public final int characterState = 4;
 
 	Thread gameThread;
 
 	public GamePanel() {
 
-		this.setPreferredSize(new Dimension(screenWidth, screenHeight));
+		this.setPreferredSize(new Dimension(screenWidth + 5 * tileSize, screenHeight + 3 * tileSize));
 		this.setBackground(Color.black);
 		this.setDoubleBuffered(true);
 		this.addKeyListener(keyHandler);
 		this.setFocusable(true);
-
-		this.playMusic(0);
-
 	}
 
 	public void setupGame() {
 		assetSetter.setObject();
+		assetSetter.setNPC();
+		assetSetter.setMonster();
+
+		playMusic(0);
+		gameState = playState;
 	}
 
 	public void startGameThread() {
@@ -89,7 +110,7 @@ public class GamePanel extends JPanel implements Runnable {
 			}
 
 			if (timer >= 1000000000) {
-				System.out.println("FPS: " + drawCount);
+				//System.out.println("FPS: " + drawCount);
 				drawCount = 0;
 				timer = 0;
 			}
@@ -97,38 +118,115 @@ public class GamePanel extends JPanel implements Runnable {
 	}
 
 	public void update() {
-		player.update();
+		if (gameState == playState) {
+
+			player.update();
+			for (int i = 0; i < npc.length; i++) {
+				if (npc[i] != null) {
+					npc[i].update();
+				}
+			}
+			for (int i = 0; i < monster.length; i++) {
+				if (monster[i] != null) {
+					if (monster[i].alive == true && monster[i].dying == false) {
+						monster[i].update();
+					}
+					if (monster[i].alive == false) {
+						monster[i] = null;
+					}
+				}
+			}
+
+		}
+		if (gameState == pauseState) {
+		}
 	}
 
 	public void paintComponent(Graphics graphics) {
 		super.paintComponent(graphics);
-
 		Graphics2D graphics2 = (Graphics2D) graphics;
 
-		tileManager.draw(graphics2);
-		for (int i = 0; i < obj.length; i++) {
-			if (obj[i] != null) {
-				obj[i].draw(graphics2, this);
-			}
+		long drawStartTime = 0;
+		if (keyHandler.checkDrawTime == true) {
+			drawStartTime = System.nanoTime();
 		}
-		player.draw(graphics2);
+
+		tileManager.draw(graphics2);
+
+		entityList.add(player);
+		addNpcsToEntityList();
+		addObjectsToEntityList();
+		addMonstersToEntityList();
+
+		Collections.sort(entityList, new Comparator<Entity>() {
+
+			@Override
+			public int compare(Entity e1, Entity e2) {
+				int result = Integer.compare(e1.worldY, e2.worldY);
+				return result;
+			}
+
+		});
+
+		drawEntities(graphics2);
+
+		ui.draw(graphics2);
+
+		if (keyHandler.checkDrawTime == true) {
+			long drawEndTime = System.nanoTime();
+
+			long drawTime = drawEndTime - drawStartTime;
+
+			graphics2.setColor(Color.white);
+			// draw time in milliseconds with 6 decimal places
+			//graphics2.drawString("Draw Time: " + drawTime / 1000000.0 + "ms", 10, 500);
+		}
 
 		graphics2.dispose();
 
 	}
 
-	public void playMusic(int i) {
-		sound.setFile(i);
-		sound.play();
-		sound.loop();
+	private void drawEntities(Graphics2D graphics2d) {
+		for (int i = 0; i < entityList.size(); i++) {
+			entityList.get(i).draw(graphics2d);
+		}
+		entityList.clear();
 	}
 
-	public void stopMusic() {
-		sound.stop();
+	private void addMonstersToEntityList() {
+		for (int i = 0; i < monster.length; i++) {
+			if (monster[i] != null) {
+				entityList.add(monster[i]);
+			}
+		}
+	}
+
+	private void addNpcsToEntityList() {
+		for (int i = 0; i < npc.length; i++) {
+			if (npc[i] != null) {
+				entityList.add(npc[i]);
+			}
+		}
+	}
+
+	private void addObjectsToEntityList() {
+		for (int i = 0; i < obj.length; i++) {
+			if (obj[i] != null) {
+				entityList.add(obj[i]);
+			}
+		}
+	}
+
+	public void playMusic(int i) {
+		music.play(i);
+		music.loop(i);
+	}
+
+	public void stopMusic(int i) {
+		music.stop(i);
 	}
 
 	public void playSoundEffect(int i) {
-		sound.setFile(0);
-		sound.play();
+		sfx.play(i);
 	}
 }

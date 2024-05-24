@@ -2,8 +2,6 @@ package main.UI.HUD;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.nio.Buffer;
-
 import main.GamePanel;
 import main.UtilityTool;
 import util.DrawUtils;
@@ -14,9 +12,10 @@ public class HUD {
     Inventory inventory;
     Map map;
     Skills skills;
-    Combat combat;
+    public Combat combat;
     UtilityTool uTool;
     DrawUtils drawUtils;
+    Equipment equipment;
     public Chat chat;
 
     public BufferedImage skillsImage, inventoryImage, combatImage, equipmentImage, magicImage;
@@ -31,6 +30,7 @@ public class HUD {
         this.uTool = new UtilityTool();
         this.drawUtils = new DrawUtils();
         this.chat = new Chat(gamePanel);
+        this.equipment = new Equipment(gamePanel);
 
         setupImages();
     }
@@ -103,11 +103,11 @@ public class HUD {
         }
 
         if (gamePanel.keyHandler.activeTab == "equipment") {
-            System.out.println("equipment");
+            equipment.drawEquipment(graphics2, x, y + gamePanel.tileSize);
         }
 
         if (gamePanel.keyHandler.activeTab == "magic") {
-            System.out.println("magic");
+            gamePanel.ui.hud.chat.addChatString("magic");
         }
 
     }

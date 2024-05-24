@@ -1,5 +1,7 @@
 package main.UI.HUD;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -7,6 +9,7 @@ import java.util.List;
 
 import main.GamePanel;
 import main.UtilityTool;
+import object.weapons.Weapon.AttackStyle;
 import util.DrawUtils;
 
 public class Combat {
@@ -15,37 +18,61 @@ public class Combat {
     DrawUtils drawUtils;
     UtilityTool uTool;
 
-    public class AttackStyle {
+    public class AttackStyleOption {
         String name;
         String description;
         BufferedImage image;
 
-        public AttackStyle(String name, String description, BufferedImage image) {
+        public AttackStyleOption(String name, String description, BufferedImage image) {
             this.name = name;
             this.description = description;
             this.image = image;
         }
     }
 
-    List<AttackStyle> attackStyles;
+    List<AttackStyleOption> attackStyleOptions;
 
     public Combat(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         this.drawUtils = new DrawUtils();
         this.uTool = new UtilityTool();
-        this.attackStyles = new ArrayList<>();
+        this.attackStyleOptions = new ArrayList<>(
+                List.of(new AttackStyleOption("punch", "Punch",
+                        uTool.setup("/hud/punch", gamePanel.tileSize - 20, gamePanel.tileSize - 20)),
+                        new AttackStyleOption("kick", "Kick",
+                                uTool.setup("/hud/kick", gamePanel.tileSize - 20, gamePanel.tileSize - 20)),
+                        new AttackStyleOption("block", "Block",
+                                uTool.setup("/hud/block", gamePanel.tileSize - 20, gamePanel.tileSize - 20))));
 
-        setupCombatStyles();
     }
 
-    private void setupCombatStyles() {
+    public void setupCombatStyles() {
         try {
-            attackStyles.add(new AttackStyle("stab", "Stab (attack)",
-                    uTool.setup("/hud/stab", gamePanel.tileSize - 20, gamePanel.tileSize - 20)));
-            attackStyles.add(new AttackStyle("slash", "Slash (strength)",
-                    uTool.setup("/hud/slash", gamePanel.tileSize - 20, gamePanel.tileSize - 20)));
-            attackStyles.add(new AttackStyle("block", "Block (defence)",
-                    uTool.setup("/hud/block", gamePanel.tileSize - 20, gamePanel.tileSize - 20)));
+            // EMPTY LIST
+            attackStyleOptions.clear();
+
+            if (gamePanel.player.equipment.weapon != null) {
+                AttackStyle[] attackStyles = gamePanel.player.equipment.weapon.attackStyles;
+
+                for (int i = 0; i < attackStyles.length; i++) {
+                    AttackStyle style = attackStyles[i];
+
+                    String name = style.toString().toLowerCase();
+                    String description = style.toString().substring(0, 1).toUpperCase()
+                            + style.toString().substring(1).toLowerCase();
+
+                    BufferedImage image = uTool.setup("/hud/" + name, gamePanel.tileSize - 20, gamePanel.tileSize - 20);
+
+                    attackStyleOptions.add(new AttackStyleOption(name, description, image));
+                }
+            } else {
+                attackStyleOptions.add(new AttackStyleOption("punch", "Punch",
+                        uTool.setup("/hud/punch", gamePanel.tileSize - 20, gamePanel.tileSize - 20)));
+                attackStyleOptions.add(new AttackStyleOption("kick", "Kick",
+                        uTool.setup("/hud/kick", gamePanel.tileSize - 20, gamePanel.tileSize - 20)));
+                attackStyleOptions.add(new AttackStyleOption("block", "Block",
+                        uTool.setup("/hud/block", gamePanel.tileSize - 20, gamePanel.tileSize - 20)));
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,21 +96,28 @@ public class Combat {
 
         textY += 55;
 
-        for (int i = 0; i < attackStyles.size(); i++) {
-            AttackStyle style = attackStyles.get(i);
+        for (int i = 0; i < attackStyleOptions.size(); i++) {
+            AttackStyleOption style = attackStyleOptions.get(i);
 
-            textX = x + 65;
+            textX = x + 75;
 
-            drawUtils.drawSubWindow(graphics2, gamePanel.tileSize * 11 + 20,
+            drawSubWindow(graphics2, gamePanel.tileSize * 11 + 20,
                     textY - 30,
                     gamePanel.tileSize * 4, gamePanel.tileSize, true);
 
             graphics2.drawString(style.description, textX, textY);
-            graphics2.drawImage(style.image, textX - 35, textY - 20, null);
+            graphics2.drawImage(style.image, textX - 40, textY - 20, null);
 
             textY += 55;
         }
 
+    }
+
+    private void drawSubWindow(Graphics2D graphics2, int x, int y, int width, int height, boolean isTransparent) {
+        Color c = new Color(255, 255, 255);
+        graphics2.setStroke(new BasicStroke(2));
+        graphics2.setColor(c);
+        graphics2.drawRoundRect(x + 2, y + 2, width - 4, height - 6, 2, 2);
     }
 
 }

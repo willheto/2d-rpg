@@ -5,11 +5,10 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-
-import javax.imageio.ImageIO;
-
 import main.GamePanel;
 import main.UtilityTool;
+import object.armor.Armor;
+import object.weapons.Weapon;
 import util.CombatUtils;
 import util.ExperienceUtils;
 
@@ -33,9 +32,6 @@ public class Entity {
     public int strengthExperience;
     public int defenceExperience;
     public int hitpointsExperience;
-
-    public Entity wieldedWeapon;
-    public Entity wieldedShield;
 
     int dialogueIndex = 0;
 
@@ -62,12 +58,30 @@ public class Entity {
     public boolean dying = false;
     public boolean isHpBarShown = false;
 
-    public int attackValue;
-    public int defenceValue;
-
     public String attackStyle;
 
     public int experience = 50;
+
+    public Equipment equipment = new Equipment();
+
+    public class Equipment {
+        public Armor helmet, cape, amulet, chestArmor, shield, legArmor, gloves, boots, ring;
+        public Weapon ammo, weapon;
+
+        public Equipment() {
+            helmet = null;
+            cape = null;
+            amulet = null;
+            ammo = null;
+            weapon = null;
+            chestArmor = null;
+            shield = null;
+            legArmor = null;
+            gloves = null;
+            boots = null;
+            ring = null;
+        }
+    }
 
     public Entity(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -128,7 +142,7 @@ public class Entity {
     }
 
     public int getAttackDamage() {
-        return CombatUtils.getAttackDamage(strengthExperience, wieldedWeapon);
+        return CombatUtils.getAttackDamage(strengthExperience, equipment.weapon);
     }
 
     public void update() {

@@ -3,6 +3,7 @@ package main;
 import entity.NPC_OldMan;
 import entity.NPC_SurvivalGuide;
 import monster.MON_GreenSlime;
+import object.SuperObject;
 
 public class AssetSetter {
 
@@ -55,6 +56,22 @@ public class AssetSetter {
         gamePanel.monster[6] = new MON_GreenSlime(gamePanel);
         gamePanel.monster[6].worldX = gamePanel.tileSize * 59;
         gamePanel.monster[6].worldY = gamePanel.tileSize * 45;
+
+    }
+
+    public void placeItemOnGround(SuperObject item) {
+        // Find an empty slot
+
+        for (int i = 0; i < gamePanel.itemsOnGround.length; i++) {
+            if (gamePanel.itemsOnGround[i] == null) {
+                gamePanel.itemsOnGround[i] = item;
+
+                gamePanel.itemsOnGround[i].worldX = gamePanel.player.worldX;
+                gamePanel.itemsOnGround[i].worldY = gamePanel.player.worldY;
+
+                break;
+            }
+        }
 
     }
 }

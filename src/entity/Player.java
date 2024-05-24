@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.Random;
 import main.GamePanel;
 import main.KeyHandler;
-import object.OBJ_IronSword;
-import object.OBJ_Key;
+import object.SuperObject;
+import object.armor.Armor;
+import object.armor.WoodenShield;
+import object.weapons.IronSword;
+import object.weapons.Weapon;
 import util.CombatUtils;
 import util.ExperienceUtils;
 
@@ -19,10 +22,9 @@ public class Player extends Entity {
     KeyHandler keyHandler;
 
     public final int screenX, screenY;
-    public ArrayList<Entity> inventory = new ArrayList<Entity>();
+    public ArrayList<SuperObject> inventory = new ArrayList<SuperObject>();
     public final int inventorySize = 20;
 
-    // New flag to ensure damage is only applied once per attack animation
     private boolean hasAttacked;
 
     public Player(GamePanel gamePanel, KeyHandler keyHandler) {
@@ -60,10 +62,7 @@ public class Player extends Entity {
         defenceExperience = 0;
         hitpointsExperience = 1154;
         currentHitpoints = ExperienceUtils.getLevelFromExperience(hitpointsExperience);
-        attackStyle = "Stab";
-
-        wieldedWeapon = new OBJ_IronSword(gamePanel);
-        wieldedShield = null;
+        attackStyle = "stab";
 
         type = 0;
 
@@ -71,15 +70,8 @@ public class Player extends Entity {
     }
 
     public void setItems() {
-        inventory.add(new OBJ_IronSword(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
-        inventory.add(new OBJ_Key(gamePanel));
+        inventory.add(new IronSword(gamePanel));
+        inventory.add(new WoodenShield(gamePanel));
 
     }
 
@@ -239,7 +231,7 @@ public class Player extends Entity {
     private void damageMonster(int monsterIndex) {
         if (monsterIndex != 999 && gamePanel.monster[monsterIndex].invincible == false) {
 
-            int damage = CombatUtils.getAttackDamage(strengthExperience, wieldedWeapon);
+            int damage = CombatUtils.getAttackDamage(strengthExperience, equipment.weapon);
             int hitChance = CombatUtils.getAttackHitChance(ExperienceUtils.getLevelFromExperience(attackExperience),
                     ExperienceUtils.getLevelFromExperience(gamePanel.monster[monsterIndex].defenceExperience));
 
@@ -453,6 +445,55 @@ public class Player extends Entity {
         right1 = setup("/player/player_right_1");
         right2 = setup("/player/player_right_2");
 
+    }
+
+    public void handleLeftClickOnitem(int inventorySlotClicked) {
+        SuperObject item = inventory.get(inventorySlotClicked);
+        if (item.isWieldable) {
+            equipItem(item);
+        } else {
+            handleFirstPossibleAction(item);
+        }
+    }
+
+    public void handleRightClickOnItem(int inventorySlotClicked, int inventoryItemOptionIndex) {
+        SuperObject item = inventory.get(inventorySlotClicked);
+        if (inventoryItemOptionIndex == 0) {
+            if (item.isWieldable) {
+                equipItem(item);
+            } else {
+                gamePanel.ui.hud.chat.addChatString("Cannot wield " + item.name);
+            }
+        } else if (inventoryItemOptionIndex == 2) { // DROP
+            handleDrop(item);
+        } else if (inventoryItemOptionIndex == 3) { // EXAMINE
+            item.handleItemExamine();
+        } else {
+            gamePanel.ui.hud.chat.addChatString("not implemented yet");
+        }
+    }
+
+    public void equipItem(SuperObject item) {
+        if (item instanceof Weapon) {
+            gamePanel.player.inventory.remove(item);
+            gamePanel.player.equipment.weapon = (Weapon) item;
+            gamePanel.ui.hud.combat.setupCombatStyles();
+        } else if (item instanceof Armor) {
+            gamePanel.player.inventory.remove(item);
+            gamePanel.player.equipment.shield = (Armor) item;
+        } else {
+            gamePanel.ui.hud.chat.addChatString("You cannot equip " + item.name);
+        }
+    }
+
+    public void handleFirstPossibleAction(SuperObject item) {
+
+    }
+
+    public void handleDrop(SuperObject item) {
+        gamePanel.ui.hud.chat.addChatString("You dropped " + item.name);
+        inventory.remove(item);
+        gamePanel.assetSetter.placeItemOnGround(item);
     }
 
 }

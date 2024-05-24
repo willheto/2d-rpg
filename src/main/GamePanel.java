@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import entity.Entity;
 import entity.Player;
 import main.UI.UI;
+import object.SuperObject;
 import tile.TileManager;
 import util.ExperienceUtils;
 
@@ -50,6 +51,7 @@ public class GamePanel extends JPanel implements Runnable {
 	public Entity obj[] = new Entity[10];
 	public Entity npc[] = new Entity[10];
 	public Entity monster[] = new Entity[20];
+	public SuperObject itemsOnGround[] = new SuperObject[10];
 	ArrayList<Entity> entityList = new ArrayList<Entity>();
 
 	public int gameState;
@@ -110,9 +112,10 @@ public class GamePanel extends JPanel implements Runnable {
 			}
 
 			if (timer >= 1000000000) {
-				//System.out.println("FPS: " + drawCount);
+
 				drawCount = 0;
 				timer = 0;
+
 			}
 		}
 	}
@@ -168,19 +171,10 @@ public class GamePanel extends JPanel implements Runnable {
 
 		});
 
+		drawObjectsOnGround(graphics2);
 		drawEntities(graphics2);
 
 		ui.draw(graphics2);
-
-		if (keyHandler.checkDrawTime == true) {
-			long drawEndTime = System.nanoTime();
-
-			long drawTime = drawEndTime - drawStartTime;
-
-			graphics2.setColor(Color.white);
-			// draw time in milliseconds with 6 decimal places
-			//graphics2.drawString("Draw Time: " + drawTime / 1000000.0 + "ms", 10, 500);
-		}
 
 		graphics2.dispose();
 
@@ -191,6 +185,19 @@ public class GamePanel extends JPanel implements Runnable {
 			entityList.get(i).draw(graphics2d);
 		}
 		entityList.clear();
+	}
+
+	private void drawObjectsOnGround(Graphics2D graphics2d) {
+		for (int i = 0; i < itemsOnGround.length; i++) {
+			if (itemsOnGround[i] != null) {
+
+				int screenX = itemsOnGround[i].worldX - player.worldX + player.screenX;
+				int screenY = itemsOnGround[i].worldY - player.worldY + player.screenY;
+
+				graphics2d.drawImage(itemsOnGround[i].image, screenX + 5, screenY + 5,
+						tileSize - 5, tileSize - 5, null);
+			}
+		}
 	}
 
 	private void addMonstersToEntityList() {

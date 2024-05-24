@@ -1,6 +1,6 @@
 package util;
 
-import entity.Entity;
+import object.weapons.Weapon;
 
 public class CombatUtils {
 
@@ -15,9 +15,18 @@ public class CombatUtils {
         return hitChance;
     }
 
-    public static int getAttackDamage(long strengthExperience, Entity wieldedWeapon) {
+    public static int getAttackDamage(long strengthExperience, Weapon wieldedWeapon) {
         int strengthLevel = ExperienceUtils.getLevelFromExperience(strengthExperience);
-        long damage = strengthLevel / 4 + wieldedWeapon.attackValue;
+
+        long damage;
+        if (wieldedWeapon == null) {
+
+            damage = 1 + strengthLevel / 4;
+
+        } else {
+            damage = strengthLevel / 4 + wieldedWeapon.attackValue;
+        }
+
         return (int) damage;
     }
 }

@@ -11,6 +11,7 @@ public class Chat {
     GamePanel gamePanel;
     DrawUtils drawUtils;
 
+    public String[] chatStrings = new String[6];
     public String currentDialogue;
     public String currentChatHeader;
 
@@ -19,6 +20,14 @@ public class Chat {
     public Chat(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         this.drawUtils = new DrawUtils();
+        this.chatStrings[0] = "Welcome to the game!";
+    }
+
+    public void addChatString(String chatString) {
+        for (int i = chatStrings.length - 1; i > 0; i--) {
+            chatStrings[i] = chatStrings[i - 1];
+        }
+        chatStrings[0] = chatString;
     }
 
     public void drawChat(Graphics2D graphics2) {
@@ -68,7 +77,24 @@ public class Chat {
             // Draw the chat image
             graphics2.drawImage(currentChatImage, x + gamePanel.tileSize, y + 30, null);
 
+        } else {
+
+            textX = x + 20;
+            int textY = y + 70;
+            graphics2.setFont(graphics2.getFont().deriveFont(30f));
+
+            textY += 55;
+
+            // Draw chat strings in reverse order to stack them
+            for (int i = 0; i < chatStrings.length; i++) {
+                if (chatStrings[i] == null) {
+                    continue;
+                }
+                graphics2.drawString(chatStrings[i], textX, textY);
+                textY -= 20; // Decrease Y position for the next string
+            }
         }
+
     }
 
 }
